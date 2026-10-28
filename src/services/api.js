@@ -1,41 +1,18 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+const BASE_URL = 'https://dummyjson.com';
 
-const CartContext = createContext();
-
-export const CartProvider = ({ children }) => {
-    const [cartItems, setCartItems] = useState(() => {
-        const saved = localStorage.getItem('cart');
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(cartItems));
-    }, [cartItems]);
-
-    const addToCart = (product) => {
-        setCartItems(prev => {
-            const existing = prev.find(item => item.id === product.id);
-            if (existing) {
-                return prev.map(item =>
-                item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-                );
-            }
-            return [...prev, { ...product, quantity: 1 }];
-        });
-    };
-
-    const removeFromCart = (id) => {
-        setCartItems(prev => prev.filter(item => item.id !== id));
-    };
-
-    const clearCart = () => setCartItems([]);
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    return (
-        <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, total }}>
-        {children}
-        </CartContext.Provider>
-    );
+export const getProducts = async (limit = 20) => {
+  const res = await fetch(`${BASE_URL}/products?limit=${limit}&delay=500`);
+  if (!res.ok) throw new Error('Ошибка загрузки товаров');
+  return res.json();
 };
 
-export const useCart = () => useContext(CartContext);
+export const getProductById = async (id) => {
+  const res = await fetch(`${BASE_URL}/products/${id}?delay=300`);
+  if (!res.ok) throw new Error('Товар не найден');
+  return res.json();
+};
+
+export const getCart = async (userId = 1) => {
+  const res = await fetch(`${BASE_URL}/carts/user/${userId}?delay=300`);
+  return res.json();
+};
